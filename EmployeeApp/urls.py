@@ -14,6 +14,6 @@ urlpatterns = [
     path(r'employee', views.employeeApi),
     path(r'employee/<int:id>', views.employeeApi),
     
-    path(r'employee/saveFile', views.saveFile),
+    path(r'employee/savefile', views.saveFile),
     
 ]+static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)
