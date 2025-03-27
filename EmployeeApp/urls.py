@@ -1,19 +1,22 @@
 from django.urls import path
 from . import views
-
-from django.conf.urls.static import static
 from django.conf import settings
+from django.conf.urls.static import static
 
+urlpatterns: list[path] = [
+    # Department URLs
+    path('department/', views.departmentApi),
+    path('department/<int:id>/', views.departmentApi),
+    
+    # Employee URLs
+    path('employee/', views.employeeApi),
+    path('employee/<int:id>/', views.employeeApi),
+    
+    # File upload URL
+    path('employee/savefile/', views.save_file, name='save_file'),
 
-urlpatterns = [
-    # Department url
-    path(r'department', views.departmentApi),
-    path(r'department/<int:id>', views.departmentApi),
-    
-    # Employees url
-    path(r'employee', views.employeeApi),
-    path(r'employee/<int:id>', views.employeeApi),
-    
-    path(r'employee/savefile', views.saveFile),
-    
-]+static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)
+]
+
+# Serve media files during development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

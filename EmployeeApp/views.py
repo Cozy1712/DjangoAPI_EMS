@@ -1,22 +1,29 @@
-from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpRequest,HttpResponseRedirect
 from django.core.exceptions import ObjectDoesNotExist
+from django.urls import reverse
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.conf import settings
+
 
 from EmployeeApp.models import Departments, Employees
 from EmployeeApp.serializers import DepartmentSerializer, EmployeeSerializer
-
-from django.core.files.storage import default_storage
 # Create your views here.
 
 # Api for Department tables
 @csrf_exempt
+# """ Handles CRUD operations for the Department model.
+#     Supports GET, POST, PUT, and DELETE requests."""
 def departmentApi(request, id=0):
+    # Handle GET request: Retrieve all departments
     if request.method == 'GET':
         departments = Departments.objects.all()
         departments_serializer = DepartmentSerializer(departments, many=True)
         return JsonResponse(departments_serializer.data,safe=False)
+    
+     # Handle POST request: Create a new department
     elif request.method == 'POST':
         department_data = JSONParser().parse(request)
         departments_serializer = DepartmentSerializer(data=department_data)
@@ -24,6 +31,7 @@ def departmentApi(request, id=0):
             departments_serializer.save()
             return JsonResponse("Added Successfully", safe=False)
         return JsonResponse("Fail to Add", safe=False)
+     # Handle PUT request: Update a new department
     elif request.method == 'PUT':
         department_data = JSONParser().parse(request)
         department = Departments.objects.get(DepartmentId=department_data['DepartmentId'])
@@ -75,9 +83,14 @@ def employeeApi(request, id=None):
             return JsonResponse({"Error": str(e)}, status=500)
             
 @csrf_exempt
-def saveFile(request):
-    file=request.FILES['file']
-    file_name=default_storage.save(file.name,file)
-    return JsonResponse(file_name,safe=False)
+#     """Handles file uploads for employee photos."""
+def save_file(request: HttpRequest) -> JsonResponse:
+    """Handles file uploads for employee photos."""
+    if request.method == 'POST' and request.FILES.get('file'):
+        file = request.FILES['file']
+        file_path = default_storage.save(f"Photos/{file.name}", ContentFile(file.read()))  # Store in 'Photos/' folder
 
-            
+        file_url = f"{settings.MEDIA_URL}{file_path}"  # Generate the accessible file URL
+        return JsonResponse({"message": "File uploaded successfully", "file_url": file_url}, status=201)
+
+    return JsonResponse({"error": "No file uploaded"}, status=400)
